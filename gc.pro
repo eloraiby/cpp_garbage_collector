@@ -16,21 +16,11 @@ TEMPLATE = app
 
 
 SOURCES += test.cpp \
-    malloc.c \
     gc.cpp
 
 HEADERS += \
-    malloc.h \
     gc.hpp
 
 #QMAKE_CXX = clang++
 #QMAKE_CXXFLAGS += `gcc -v -x c++ /dev/null -fsyntax-only`
 #unix:INCLUDEPATH += /usr/local/include /usr/include/c++/4.5 /usr/include/c++/4.5/x86_64-linux-gnu
-
-
-
-
-
-
-
-

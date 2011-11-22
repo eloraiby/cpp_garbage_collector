@@ -38,7 +38,7 @@
 #include <list>
 #include <limits>
 
-#include "malloc.h"
+#include <malloc.h>
 
 // enable/disable extensive debugging log
 #define GC_DEBUG
@@ -100,12 +100,12 @@ public :
 
 	inline pointer allocate(size_type cnt, typename std::allocator<void>::const_pointer = 0)
 	{
-		return reinterpret_cast<pointer>(dlmalloc(cnt * sizeof(T)));
+		return reinterpret_cast<pointer>(malloc(cnt * sizeof(T)));
 	}
 
 	inline void deallocate(pointer p, size_type)
 	{
-		dlfree(p);
+		free(p);
 	}
 
 	//    size
@@ -339,7 +339,7 @@ public:
 	void*	operator new(size_t s)
 	{
 		//void*::operator new()
-		unsigned char* start	= static_cast<unsigned char*>(dlmalloc(s));
+		unsigned char* start	= static_cast<unsigned char*>(malloc(s));
 		unsigned char* end		= &(start[s - 1]);
 
 		block::gc_blocks_.insert(block(start, end, false));
@@ -366,7 +366,7 @@ public:
 		block::total_size_	-= reinterpret_cast<size_t>(b.range.second) - reinterpret_cast<size_t>(b.range.first) + 1;
 		block::gc_blocks_.erase(it);
 
-		dlfree(p);
+		free(p);
 
 #ifdef GC_DEBUG
 		std::cout << "deleting object" << std::endl;
@@ -429,7 +429,7 @@ public :
 	inline pointer allocate(size_type cnt, typename std::allocator<void>::const_pointer = 0)
 	{
 		size_t				s	= cnt * sizeof(T);
-		unsigned char* start	= static_cast<unsigned char*>(dlmalloc(s));
+		unsigned char* start	= static_cast<unsigned char*>(malloc(s));
 		unsigned char* end		= &(start[s - 1]);
 
 		block::gc_blocks_.insert(block(start, end, true));
@@ -453,7 +453,7 @@ public :
 
 		block::gc_blocks_.erase(it);
 
-		dlfree(p);
+		free(p);
 
 #ifdef GC_DEBUG
 		std::cout << "allocator:deleting object" << std::endl;

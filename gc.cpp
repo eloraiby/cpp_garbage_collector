@@ -91,7 +91,7 @@ void mark_and_sweep()
 
 	for( block_set::iterator it = block::gc_blocks_.begin(); it != block::gc_blocks_.end(); ++it )
 	{
-		if( reachable.find(*it) == reachable.end() )
+		if( reachable.find(*it) == reachable.end() && !it->is_container )
 		{
 			unreachable.push_back(it);
 		}
@@ -105,11 +105,8 @@ void mark_and_sweep()
 	{
 		block	b	= *(unreachable[i]);
 
-		if( !b.is_container )
-		{
-			object*	o	= static_cast<object*>(b.range.first);
-			delete o;
-		}
+		object*	o	= static_cast<object*>(b.range.first);
+		delete o;
 	}
 #ifdef GC_DEBUG
 	std::cout << std::dec << "block count " << block::gc_blocks_.size() << std::endl;
