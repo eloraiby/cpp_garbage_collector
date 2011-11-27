@@ -91,7 +91,7 @@ void mark_and_sweep()
 
 	for( block_set::iterator it = block::gc_blocks_.begin(); it != block::gc_blocks_.end(); ++it )
 	{
-		if( reachable.find(*it) == reachable.end() && !it->is_container )
+		if( reachable.find(*it) == reachable.end() && !it->is_container_ )
 		{
 			unreachable.push_back(it);
 		}
@@ -105,7 +105,7 @@ void mark_and_sweep()
 	{
 		block	b	= *(unreachable[i]);
 
-		object*	o	= static_cast<object*>(b.range.first);
+		object*	o	= static_cast<object*>(b.range_.first);
 		delete o;
 	}
 #ifdef GC_DEBUG

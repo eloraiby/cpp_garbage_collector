@@ -134,14 +134,12 @@ typedef std::set<base_handle*, std::less<base_handle*>, allocator_<base_handle*>
   */
 struct block
 {
-	std::pair<void*, void*>					range;
-	bool									is_container : 1;
-	block(void* s, void* e, bool ia) : range(s, e), is_container(ia)
+	block(void* s, void* e, bool ia) : range_(s, e), is_container_(ia)
 	{
 
 	}
 
-	block(const block& b) : range(b.range), is_container(b.is_container)
+	block(const block& b) : range_(b.range_), is_container_(b.is_container_), count_(b.count_), refs_(b.refs_)
 	{
 
 	}
@@ -149,11 +147,11 @@ struct block
 	// this is for splay_set
 	friend bool			operator < (const block& p0, const block& p1)
 	{
-		size_t		p0_addr_s	= reinterpret_cast<size_t>(p0.range.first);
-		size_t		p0_addr_e	= reinterpret_cast<size_t>(p0.range.second);
+		size_t		p0_addr_s	= reinterpret_cast<size_t>(p0.range_.first);
+		size_t		p0_addr_e	= reinterpret_cast<size_t>(p0.range_.second);
 
-		size_t		p1_addr_s	= reinterpret_cast<size_t>(p1.range.first);
-		size_t		p1_addr_e	= reinterpret_cast<size_t>(p1.range.second);
+		size_t		p1_addr_s	= reinterpret_cast<size_t>(p1.range_.first);
+		size_t		p1_addr_e	= reinterpret_cast<size_t>(p1.range_.second);
 
 		if(( p0_addr_s >= p1_addr_s && p0_addr_s <= p1_addr_e )
 		   || ( p1_addr_s >= p0_addr_s && p1_addr_s <= p0_addr_e ))
@@ -163,6 +161,10 @@ struct block
 
 
 protected:
+	std::pair<void*, void*>					range_;
+	bool									is_container_ : 1;
+
+	size_t									count_;	///< number of handles pointing to this block (faster destruction)
 	handle_ptr_set							refs_;	///< references inside this block
 
 	static block_set						gc_blocks_;
@@ -174,7 +176,7 @@ protected:
 
 	friend void								mark_and_sweep();
 
-	template<typename T> friend struct		handle;
+	template<typename T> friend struct		generic_handle;
 	template<typename T> friend class		container_allocator;
 	friend class							object;
 };	// struct block
@@ -193,9 +195,9 @@ protected:
 
 
 template<typename T>
-struct handle : public base_handle
+struct generic_handle : public base_handle
 {
-	handle() : base_handle(), ref_(0)
+	generic_handle() : base_handle(), ref_(0)
 	{
 		internal_init_();
 		block_iter_	= block::gc_blocks_.end();
@@ -204,7 +206,7 @@ struct handle : public base_handle
 #endif
 	}
 
-	handle(T* t) : ref_(t)
+	generic_handle(T* t) : ref_(t)
 	{
 		internal_init_();
 		block_iter_ = block::find_address_block(ref_);
@@ -214,7 +216,7 @@ struct handle : public base_handle
 #endif
 	}
 
-	handle(const handle& r) : ref_(r.ref_)
+	generic_handle(const generic_handle& r) : ref_(r.ref_)
 	{
 		internal_init_();
 		block_iter_	= r.block_iter_;
@@ -230,7 +232,7 @@ struct handle : public base_handle
 	//
 	// 2 - if child ref, the block is freed after all refs are destroyed
 	//
-	~handle()
+	~generic_handle()
 	{
 		// check if we belong to some block
 		block_set::iterator	it = block::find_address_block(this);
@@ -256,7 +258,7 @@ struct handle : public base_handle
 #endif
 	}
 
-	handle& operator = (const handle& r)
+	generic_handle& operator = (const generic_handle& r)
 	{
 		ref_	= r.ref_;
 		block_iter_	= r.block_iter_;
@@ -289,7 +291,7 @@ protected:
 		{
 			// this belongs to an object that is managed by GC
 #ifdef GC_DEBUG
-			std::cout << "child: block[" << std::hex << (size_t)(*it).range.first << "]->gc_ref" << std::endl;
+			std::cout << "child: block[" << std::hex << (size_t)(*it).range_.first << "]->gc_ref" << std::endl;
 #endif
 			handle_ptr_set&	refs	= const_cast<handle_ptr_set&>((*it).refs_);
 
@@ -363,7 +365,7 @@ public:
 		}
 
 		const block &b	= *it;
-		block::total_size_	-= reinterpret_cast<size_t>(b.range.second) - reinterpret_cast<size_t>(b.range.first) + 1;
+		block::total_size_	-= reinterpret_cast<size_t>(b.range_.second) - reinterpret_cast<size_t>(b.range_.first) + 1;
 		block::gc_blocks_.erase(it);
 
 		free(p);

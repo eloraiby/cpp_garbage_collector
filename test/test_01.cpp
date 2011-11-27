@@ -25,7 +25,7 @@ public:
 	}
 
 
-	gc::list< handle<B> >	b;
+	gc::list< generic_handle<B> >	b;
 };
 
 class B : public gc::object
@@ -41,7 +41,7 @@ public:
 		cout << "~B()" << endl;
 	}
 
-	handle<A>	a;
+	generic_handle<A>	a;
 };
 
 int main(int argc, char *argv[])
@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
 	cout << "Test 1" << endl;
 
 	{
-		gc::handle<B>	bptr(new B());
-		gc::handle<A>	aptr(new A());
+		gc::generic_handle<B>	bptr(new B());
+		gc::generic_handle<A>	aptr(new A());
 
 		aptr->b.push_back(bptr);
 		bptr->a	= aptr;
