@@ -87,13 +87,13 @@ void mark_and_sweep()
 	std::cout << std::dec << "total reachables: " << reachable.size() << std::endl;
 #endif
 
-	std::vector<block_map::iterator>		unreachable;
+	std::vector<block>		unreachable;
 
 	for( block_map::iterator it = block::gc_blocks_.begin(); it != block::gc_blocks_.end(); ++it )
 	{
 		if( reachable.find(it->first) == reachable.end() )
 		{
-			unreachable.push_back(it);
+			unreachable.push_back(it->first);
 		}
 	}
 
@@ -103,9 +103,9 @@ void mark_and_sweep()
 
 	for( size_t i = 0; i < unreachable.size(); ++i )
 	{
-		block	b	= unreachable[i]->first;
+		block	&b	= unreachable[i];
 
-		if( block::gc_blocks_.find(b) != block::gc_blocks_.end() )
+		if( block::gc_blocks_.find(b) != block::gc_blocks_.end() )	// check if it was removed by one of the deleted blocks before
 		{
 			object*	o	= static_cast<object*>(b.range_.first);
 			delete o;

@@ -10,6 +10,8 @@ TARGET = test_01
 CONFIG   += console
 CONFIG   -= app_bundle
 
+#QMAKE_CXX = clang
+
 TEMPLATE = app
 
 INCLUDEPATH += ../../../include/

@@ -93,7 +93,7 @@ struct block
 		size_t		p1_addr_e	= reinterpret_cast<size_t>(p1.range_.second);
 
 		if(( p0_addr_s >= p1_addr_s && p0_addr_s <= p1_addr_e )
-		   || ( p1_addr_s >= p0_addr_s && p1_addr_s <= p0_addr_e ))
+				|| ( p1_addr_s >= p0_addr_s && p1_addr_s <= p0_addr_e ))
 			return false;
 		return (p0_addr_s < p1_addr_s);
 	}
@@ -190,20 +190,25 @@ private:
 struct base_handle
 {
 protected:
-	block_map::iterator					block_iter_;
+	block_map::iterator					block_iter_;	// TODO: this is dangerous: need to use only blocks, or at least mark them.
+	//		SHOULD NEVER use static data, because, it might revive if someone
+	//		creates an object while this is destroying a cycle object
 
 	void								delete_if_filled(void *ref)
 	{
-		if( ref )
+		if( ref && block::gc_blocks_.find(block(ref, ref)) != block::gc_blocks_.end() )
 		{
-			--(block_iter_->second.count);
 			if( !block_iter_->second.count )
 			{
+				--(block_iter_->second.count);
+				if( !block_iter_->second.count )
+				{
 #ifdef GC_DEBUG
-				std::cout << "delete object from handle << " << std::hex << (size_t)(this) << std::endl;
+					std::cout << "delete object from handle << " << std::hex << (size_t)(this) << std::endl;
 #endif
-				object*	o	= static_cast<object*>(block_iter_->first.range_.first);
-				delete o;
+					object*	o	= static_cast<object*>(block_iter_->first.range_.first);
+					delete o;
+				}
 			}
 		}
 	}
