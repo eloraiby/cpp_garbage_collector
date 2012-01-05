@@ -10,6 +10,8 @@ TARGET = gc
 TEMPLATE = lib
 CONFIG += staticlib
 
+#QMAKE_CXX = clang
+
 SOURCES += \
 	../../../src/gc.cpp
 

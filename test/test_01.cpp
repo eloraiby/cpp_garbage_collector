@@ -25,7 +25,7 @@ public:
 	}
 
 
-	gc::list< handle<B> >	b;
+	handle<B>	b;
 };
 
 class B : public gc::object
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		gc::handle<B>	bptr(new B());
 		gc::handle<A>	aptr(new A());
 
-		aptr->b.push_back(bptr);
+		aptr->b = bptr;
 		bptr->a	= aptr;
 	}
 
